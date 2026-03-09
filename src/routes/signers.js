@@ -9,19 +9,18 @@ router.post('/create', async (req, res) => {
   if (!fid) return res.status(400).json({ error: 'fid required' });
 
   try {
-    const response = await fetch('https://api.neynar.com/v2/farcaster/signer/sponsored', {
+    const signerRes = await fetch('https://api.neynar.com/v2/farcaster/signer', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'x-api-key': NEYNAR_API_KEY,
       },
-      body: JSON.stringify({ fid }),
     });
 
-    const data = await response.json();
-    console.log('Sponsored signer response:', JSON.stringify(data));
+    const data = await signerRes.json();
+    console.log('Signer response:', JSON.stringify(data));
 
-    if (!response.ok) {
+    if (!signerRes.ok) {
       return res.status(400).json({ error: data.message || 'Failed to create signer' });
     }
 
@@ -52,6 +51,7 @@ router.get('/status/:fid', async (req, res) => {
     );
 
     const data = await response.json();
+    console.log('Signer status:', JSON.stringify(data));
     res.json({ approved: data.status === 'approved', status: data.status });
   } catch (err) {
     res.status(500).json({ error: err.message });
