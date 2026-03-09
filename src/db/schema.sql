@@ -1,33 +1,37 @@
 CREATE TABLE IF NOT EXISTS users (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  fid INTEGER UNIQUE NOT NULL,
-  signer_uuid TEXT NOT NULL,
+  fid INTEGER PRIMARY KEY,
+  signer_uuid TEXT,
   wallet_address TEXT,
-  tone_prompt TEXT DEFAULT 'Be concise, direct, and human. No fluff.',
+  tone_prompt TEXT DEFAULT 'Be helpful and engaging',
   subscription_active INTEGER DEFAULT 0,
-  subscription_expires INTEGER,
-  created_at INTEGER DEFAULT (unixepoch())
+  subscription_expires INTEGER DEFAULT 0,
+  subscription_tier TEXT DEFAULT 'human',
+  daily_post_count INTEGER DEFAULT 0,
+  last_post_date TEXT
 );
 
 CREATE TABLE IF NOT EXISTS payments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  fid INTEGER NOT NULL,
-  tx_hash TEXT UNIQUE NOT NULL,
-  amount_usdc TEXT NOT NULL,
-  verified INTEGER DEFAULT 0,
-  created_at INTEGER DEFAULT (unixepoch()),
-  FOREIGN KEY (fid) REFERENCES users(fid)
+  fid INTEGER,
+  tx_hash TEXT UNIQUE,
+  amount_usdc TEXT,
+  tier TEXT DEFAULT 'human',
+  verified INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS reply_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  replier_fid INTEGER NOT NULL,
-  target_cast_hash TEXT NOT NULL,
+  replier_fid INTEGER,
+  target_cast_hash TEXT,
   reply_cast_hash TEXT,
-  created_at INTEGER DEFAULT (unixepoch()),
+  created_at INTEGER DEFAULT (strftime('%s','now')),
   UNIQUE(replier_fid, target_cast_hash)
 );
 
-CREATE INDEX IF NOT EXISTS idx_users_fid ON users(fid);
-CREATE INDEX IF NOT EXISTS idx_reply_log_replier ON reply_log(replier_fid);
-CREATE INDEX IF NOT EXISTS idx_reply_log_target ON reply_log(target_cast_hash);
+CREATE TABLE IF NOT EXISTS scheduled_posts (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  fid INTEGER,
+  text TEXT,
+  post_at INTEGER,
+  posted INTEGER DEFAULT 0
+);
