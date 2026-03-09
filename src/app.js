@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import express from 'express';
+import cors from 'cors';
 import usersRouter from './routes/users.js';
 import paymentsRouter from './routes/payments.js';
 import signersRouter from './routes/signers.js';
@@ -7,6 +8,7 @@ import { startPoller } from './services/poller.js';
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 
 app.use('/api/users', usersRouter);
