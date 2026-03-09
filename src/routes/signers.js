@@ -8,7 +8,7 @@ import crypto from 'crypto';
 const router = Router();
 
 const CUSTODY_PRIVATE_KEY = `0x${process.env.APP_CUSTODY_PRIVATE_KEY}`;
-const APP_FID = 1079922;
+const APP_FID = 2869937;
 
 function generateEd25519Keypair() {
   const { privateKey, publicKey } = crypto.generateKeyPairSync('ed25519');
