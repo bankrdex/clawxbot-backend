@@ -37,7 +37,7 @@ router.post('/create', async (req, res) => {
         name: 'Farcaster SignedKeyRequestValidator',
         version: '1',
         chainId: 10,
-        verifyingContract: '0x00000000FC700472606ED4fA22623Fd29933F541',
+        verifyingContract: '0x00000000FC700472606ED4fA22623Acf62c60553',
       },
       types: {
         SignedKeyRequest: [
