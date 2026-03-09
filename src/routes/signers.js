@@ -74,7 +74,7 @@ router.post('/create', async (req, res) => {
     }
 
     const token = data.result.signedKeyRequest.token;
-    const approvalUrl = `https://warpcast.com/~/sign-in-with-farcaster?token=${token}`;
+    const approvalUrl = `https://warpcast.com/~/signed-key-request?token=${token}`;
 
     // Store signer keypair for this user
     db.prepare(`
