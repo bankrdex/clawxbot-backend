@@ -9,6 +9,8 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.24.0",
+    "@farcaster/core": "^0.14.0",
+    "@noble/ed25519": "^2.1.0",
     "@neynar/nodejs-sdk": "^2.0.0",
     "better-sqlite3": "^9.6.0",
     "cors": "^2.8.5",
