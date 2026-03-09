@@ -2,14 +2,10 @@ import { NeynarAPIClient } from '@neynar/nodejs-sdk';
 
 const neynar = new NeynarAPIClient({ apiKey: process.env.NEYNAR_API_KEY });
 
-const BOT_FIDS = new Set([1]);
+export const BOT_FIDS = new Set([1]);
 
 export async function getUserReplies(fid, limit = 20) {
-  const response = await neynar.fetchCastsForUser({
-    fid,
-    limit,
-    includeReplies: true,
-  });
+  const response = await neynar.fetchCastsForUser({ fid, limit, includeReplies: true });
   return response.casts.filter(c => c.parent_hash);
 }
 
@@ -33,8 +29,15 @@ export async function getUserAddresses(fid) {
 }
 
 export async function getCastReplies(castHash) {
-  const response = await neynar.fetchCastsInThread({ threadHash: castHash });
-  return response.result?.casts || [];
+  try {
+    const response = await neynar.lookupCastConversation({
+      identifier: castHash,
+      type: 'hash',
+      replyDepth: 1,
+    });
+    return response.conversation?.cast?.direct_replies || [];
+  } catch (err) {
+    console.error('getCastReplies error:', err.message);
+    return [];
+  }
 }
-
-export { BOT_FIDS };
