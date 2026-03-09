@@ -1,6 +1,6 @@
 import db from '../db/client.js';
 import { generateReply } from './claude.js';
-import { getCastReplies, BOT_FIDS } from './neynar.js';
+import { getUserCasts, getCastReplies, BOT_FIDS } from './neynar.js';
 import { postCastToHub } from './hub.js';
 import { canReply } from '../middleware/rateLimiter.js';
 
@@ -8,21 +8,15 @@ const POLL_INTERVAL = 2 * 60 * 1000;
 
 async function processUser(user) {
   try {
-    const { NeynarAPIClient } = await import('@neynar/nodejs-sdk');
-    const neynar = new NeynarAPIClient({ apiKey: process.env.NEYNAR_API_KEY });
-
-    const castsRes = await neynar.fetchCastsForUser({ fid: user.fid, limit: 10 });
-    const casts = castsRes.casts.filter(c => !c.parent_hash);
+    const casts = await getUserCasts(user.fid, 10);
 
     for (const cast of casts) {
       const replies = await getCastReplies(cast.hash);
 
       for (const reply of replies) {
         const authorFid = reply.author?.fid;
-
         if (authorFid === user.fid) continue;
         if (BOT_FIDS.has(authorFid)) continue;
-
         if (!canReply(user.fid)) {
           console.log(`Rate limit hit for FID ${user.fid}`);
           return;
@@ -31,7 +25,6 @@ async function processUser(user) {
         const alreadyReplied = db
           .prepare(`SELECT id FROM reply_log WHERE replier_fid = ? AND target_cast_hash = ?`)
           .get(user.fid, reply.hash);
-
         if (alreadyReplied) continue;
 
         const replyText = await generateReply(
@@ -39,13 +32,11 @@ async function processUser(user) {
           user.tone_prompt,
           reply.author?.username || 'someone'
         );
-
         if (!replyText) continue;
 
-        // Post via hub using user's own Ed25519 key
         const posted = await postCastToHub({
           fid: user.fid,
-          privateKeyHex: user.wallet_address, // stored per-user Ed25519 private key
+          privateKeyHex: user.wallet_address,
           text: replyText,
           parentCastHash: reply.hash,
         });
@@ -54,7 +45,7 @@ async function processUser(user) {
           `INSERT INTO reply_log (replier_fid, target_cast_hash, reply_cast_hash) VALUES (?, ?, ?)`
         ).run(user.fid, reply.hash, posted.hash || reply.hash);
 
-        console.log(`Replied on behalf of FID ${user.fid} to ${reply.hash}`);
+        console.log(`✅ Replied on behalf of FID ${user.fid} to ${reply.hash}`);
       }
     }
   } catch (err) {
@@ -69,7 +60,6 @@ export function startPoller() {
     const activeUsers = db
       .prepare(`SELECT * FROM users WHERE subscription_active = 1 AND subscription_expires > ?`)
       .all(now);
-
     console.log(`Polling ${activeUsers.length} active users...`);
     for (const user of activeUsers) {
       await processUser(user);
